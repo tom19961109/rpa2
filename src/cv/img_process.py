@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     window_dict = get_window_from_mouse()
     img = capture_window(window_dict['hwnd'])
-    ptn = cv2.imread(r'D:\workspace\rpa2\data\0001.png')
+    ptn = cv2.imread(r'/data/0001_1.png')
     result_img, boxes = template_match_and_draw(img, ptn, 0.85)
     print("找到數量:", len(boxes))
     print("boxes:", boxes)

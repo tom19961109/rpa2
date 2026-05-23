@@ -41,6 +41,20 @@ def get_window_from_mouse():
         last_state = state
         time.sleep(0.01)
 
+def move_window(hwnd, x=505, y=5):
+    rect = win32gui.GetWindowRect(hwnd)
+    width = rect[2] - rect[0]
+    height = rect[3] - rect[1]
+
+    win32gui.SetWindowPos(
+        hwnd,
+        None,
+        x,
+        y,
+        width,
+        height,
+        0
+    )
 
 def capture_window(hwnd):
     left, top, right, bottom = win32gui.GetWindowRect(hwnd)
