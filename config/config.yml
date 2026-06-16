@@ -1,2 +1,6 @@
+mode: 0
+times: 50
 keybind:
   jump: z
+script:
+  path: ./scripts/帽車.yml

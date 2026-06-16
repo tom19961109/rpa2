@@ -27,11 +27,11 @@ def auto_action(action, keyboard):
         keyboard.press(Key.right)
         time.sleep(0.05)
         keyboard.press(jump)
-        time.sleep(0.08)
+        time.sleep(0.07)
         keyboard.release(jump)
         time.sleep(0.05)
         keyboard.press(jump)
-        time.sleep(0.08)
+        time.sleep(0.07)
         keyboard.release(jump)
         time.sleep(0.05)
         keyboard.release(Key.right)
@@ -40,11 +40,11 @@ def auto_action(action, keyboard):
         keyboard.press(Key.left)
         time.sleep(0.05)
         keyboard.press(jump)
-        time.sleep(0.08)
+        time.sleep(0.07)
         keyboard.release(jump)
         time.sleep(0.05)
         keyboard.press(jump)
-        time.sleep(0.08)
+        time.sleep(0.07)
         keyboard.release(jump)
         time.sleep(0.05)
         keyboard.release(Key.left)
@@ -94,7 +94,7 @@ def move_to_target(rx, ry, tx, ty):
     dx = tx - rx
     dy = ty - ry
 
-    if abs(dx) <= 1 and abs(dy) <= 1:
+    if abs(dx) <= 1 and abs(dy) == 0:
         return "arrived"
 
     # 上下差距大 → 需要跳

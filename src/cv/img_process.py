@@ -22,7 +22,7 @@ def template_match_and_draw(img, template, threshold=0.8, max_only=True):
     # 模板匹配
     result = cv2.matchTemplate(img_gray, tpl_gray, cv2.TM_CCOEFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-    print(max_val, max_loc)
+    # print(max_val, max_loc)
     if not max_only:
         x1, y1 = max_loc
         x2, y2 = x1 + w, y1 + h
