@@ -218,7 +218,12 @@ if __name__ == '__main__':
         print(f'成功載入帽車腳本: {os.path.abspath(file_name)}')
         count = 0
         start_time = time.time()
+        ScriptParams.status = 'running'
         while count < ConfigTimes:
+            if ScriptParams.status == 'wait':
+                print('停止腳本')
+                break
+
             for step, step_dict in enumerate(script_config['script_step'], start=1):
                 mode = step_dict.get('mode')
                 img_path = step_dict.get('img_path')

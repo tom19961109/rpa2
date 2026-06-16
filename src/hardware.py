@@ -13,10 +13,11 @@ def click(mouse, x, y):
     mouse.click(Button.left, 1)
 
 def on_press(key):
+    print(key)
     try:
         if key == Key.f7:
             ScriptParams.status = 'wait'
-            sys.exit(0)
+            return True
         elif key == Key.f8:
             ScriptParams.status = 'running'
             return False
