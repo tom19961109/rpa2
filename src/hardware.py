@@ -13,7 +13,7 @@ def click(mouse, x, y):
     mouse.click(Button.left, 1)
 
 def on_press(key):
-    print(key)
+    # print(key)
     try:
         if key == Key.f7:
             ScriptParams.status = 'wait'

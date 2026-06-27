@@ -1,0 +1,72 @@
+script_step:
+  - mode: shift_click
+    img_path: .\data\50\npc2.png
+    check_path_list:
+      - img: .\data\50\floor.png
+        flag: not
+      - img: .\data\50\0002.png
+        flag: or
+    post_list:
+    delta: [ 0, 5 ]
+  - mode: shift_click
+    img_path: .\data\50\npc3.png
+    check_path_list:
+      - img: .\data\50\floor.png
+        flag: not
+      - img: .\data\50\0002.png
+        flag: or
+    post_list:
+    delta: [ 0, 5 ]
+  - mode: shift_click
+    img_path: .\data\50\npc.png
+    check_path_list:
+      - img: .\data\50\floor.png
+        flag: not
+      - img: .\data\50\0001.png
+        flag: or
+      - img: .\data\50\k1.png
+        flag: or
+      - img: .\data\50\k2.png
+        flag: or
+      - img: .\data\50\k3.png
+        flag: or
+      - img: .\data\50\k4.png
+        flag: or
+    post_list:
+    delta: [ 0, 5 ]
+  - mode: click
+    img_path: .\data\50\si.png
+    check_path_list:
+    post_list:
+    delta:
+  - mode: click
+    img_path: .\data\50\keep2.png
+    post_list:
+    delta:
+  - mode: home_send
+    img_path: .\data\50\out2.png
+    action_list:
+      - img: .\data\common\home.png
+      - img: .\data\common\50.png
+    post_list:
+    delta:
+  - mode: role_run
+    role: .\data\common\role.png
+    img_path: .\data\50\floor.png
+    pos_list:
+      - [ 684, 335 ]
+    check_path_list:
+      - img: .\data\50\end.png
+        flag: not
+    delta:
+  - mode: shift_click
+    img_path: .\data\50\npc.png
+    check_path_list:
+      - img: .\data\50\end.png
+        flag: or
+    post_list:
+    delta: [ 0, 5 ]
+  - mode: click
+    img_path: .\data\50\yes.png
+    post_list:
+    delta:

@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import yaml
 import sys
-from src.auto import move_to_target, auto_action, check_black, find_platform
+from src.auto import move_to_target, auto_action, check_black, find_platform, move_to_target_with_role, auto_action_role
 from src.cv.img_process import template_match_and_draw, get_role_pos
 from src.hardware import click, on_press
 from src.win_func.get_win import get_window_from_mouse, capture_window, get_mouse_pos_in_window, monitor_click, \
@@ -13,13 +13,34 @@ from src.win_func.get_win import get_window_from_mouse, capture_window, get_mous
 from pynput.mouse import Controller as MouseController
 from pynput.keyboard import Controller as KeyboardController, Key
 import pynput.keyboard as keyboard_listener
-from utility.params import map_h, map_w, ScriptParams, ConfigMode, ConfigScriptPath, ConfigTimes
+from utility.params import map_h, map_w, ScriptParams, ConfigMode, ConfigScriptPath, ConfigTimes, home_send, \
+    attack_multi
 from utility.utility import read_img
 
 
-def case1(window_dict, img_path, delta):
+def case1(window_dict, img_path, delta, check_path_list=None):
     img = capture_window(window_dict['hwnd'])
     ptn = read_img(rf'{img_path}')
+
+    if check_path_list:
+        flag_list = []
+        pass_flag = False
+        for i in check_path_list:
+            check_img = read_img(rf"{i['img']}")
+            flag = i['flag']
+            _, c_boxes = template_match_and_draw(img, check_img, 0.85)
+            flag_list.append(flag)
+            if flag == 'or' and not c_boxes:
+                continue
+            elif flag == 'or' and c_boxes:
+                pass_flag = True
+                break
+            elif flag == 'not' and c_boxes:
+                return
+        if 'or' in flag_list and not pass_flag:
+            return
+    # cv2.imencode('.png', img)[1].tofile('test_img.png')
+    # cv2.imencode('.png', ptn)[1].tofile('test_ptn.png')
     result_img, boxes = template_match_and_draw(img, ptn, 0.85)
     if len(boxes):
         target = boxes[0]
@@ -28,7 +49,7 @@ def case1(window_dict, img_path, delta):
         click(mouse,
               click_pos[0] + window_dict['rect'][0],
               click_pos[1] + window_dict['rect'][1])
-        time.sleep(1)
+        time.sleep(2)
         return
         # while 1:
         #     result = get_mouse_pos_in_window(window_dict['hwnd'])
@@ -44,8 +65,28 @@ def case2(window_dict, img_path):
         sx, sy = get_relative_mouse_pos(window_dict['hwnd'], target[0], target[1])
         click(mouse, sx, sy)
         check_black(window_dict, None)
-        time.sleep(1)
+        time.sleep(2)
 
+
+def case3(window_dict, mouse, img_path, action_list):
+    img = capture_window(window_dict['hwnd'])
+    ptn = read_img(rf'{img_path}')
+    result_img, boxes = template_match_and_draw(img, ptn, 0.85)
+
+    if len(boxes):
+        mouse.position = (window_dict['rect'][0] + 50, window_dict['rect'][1] + 50)
+        for i in range(3):
+            keyboard.press(home_send)
+            time.sleep(0.1)
+            keyboard.release(home_send)
+            time.sleep(0.1)
+
+        img = capture_window(window_dict['hwnd'])
+        for i in action_list:
+            check_img = read_img(rf"{i['img']}")
+            _, c_boxes = template_match_and_draw(img, check_img, 0.85)
+            if c_boxes:
+                case2(window_dict, i['img'])
 
 def change_channel(window_dict, keyboard):
     img = capture_window(window_dict['hwnd'])
@@ -76,6 +117,9 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
     img = capture_window(window_dict['hwnd'])
     ptn = read_img(ptn_path)
     result_img, boxes = template_match_and_draw(img, ptn, 0.85)
+    if ScriptParams.status == 'wait':
+        return None
+
     if len(boxes):
         h, w = ptn.shape[:2]
         mx, my, x1, y1 = boxes[0]
@@ -135,6 +179,9 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
                 print(f"target:{tx, ty}, now: {sx, sy}, action: {action}")
 
         check_black(window_dict, keyboard)
+        if ScriptParams.status == 'wait':
+            return None
+
         img = capture_window(window_dict['hwnd'])
         ptn = read_img(ptn_path)
         result_img, boxes = template_match_and_draw(img, ptn, 0.85)
@@ -150,6 +197,55 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
         return 'done'
     return None
 
+
+def auto_run_with_role(window_dict, keyboard, mouse,
+                       ptn_path, role, pos_list, check_path_list):
+    img = capture_window(window_dict['hwnd'])
+    ptn = read_img(ptn_path)
+    result_img, boxes = template_match_and_draw(img, ptn, 0.85)
+    if ScriptParams.status == 'wait':
+        return None
+
+    if len(boxes):
+        for pos in pos_list:
+            tx, ty = pos
+            if ScriptParams.status == 'wait':
+                return None
+            img = capture_window(window_dict['hwnd'])
+            role_ptn = read_img(role)
+            _, role_boxes = template_match_and_draw(img, role_ptn, 0.85)
+            if len(role_boxes):
+                rx1, ry1, rx2, ry2 = role_boxes[0]
+                action = move_to_target_with_role(rx1, ry1, tx, ty)
+                print(action)
+                if action == 'arrived':
+                    if check_path_list:
+                        for i in check_path_list:
+                            check_img = read_img(rf"{i['img']}")
+                            flag = i['flag']
+                            _, c_boxes = template_match_and_draw(img, check_img, 0.85)
+                            if flag == 'not' and c_boxes:
+                                return None
+
+                    for i in range(3):
+                        keyboard.press(attack_multi)
+                        time.sleep(0.5)
+                    keyboard.release(attack_multi)
+                    if ScriptParams.status == 'wait':
+                        return None
+                    for i in range(2):
+                        keyboard.press(Key.up)
+                        time.sleep(0.2)
+                    keyboard.release(Key.up)
+                    if ScriptParams.status == 'wait':
+                        return None
+                else:
+                    auto_action_role(action, keyboard)
+            else:
+                x, y = mouse.position
+                mouse.position = (x - 100, y)
+
+    return None
 
 def test(window_dict):
     x1 = 0
@@ -207,7 +303,7 @@ if __name__ == '__main__':
             input('輸入任意見結束程式')
             sys.exit(0)
 
-        with open(r".\scripts\帽車.yml", "r", encoding="utf-8") as f:
+        with open(file_name, "r", encoding="utf-8") as f:
             script_config = yaml.safe_load(f)
 
         if not script_config.get('script_step'):
@@ -215,7 +311,7 @@ if __name__ == '__main__':
             input('輸入任意見結束程式')
             sys.exit(0)
 
-        print(f'成功載入帽車腳本: {os.path.abspath(file_name)}')
+        print(f'成功載入腳本: {os.path.abspath(file_name)}')
         count = 0
         start_time = time.time()
         ScriptParams.status = 'running'
@@ -227,6 +323,9 @@ if __name__ == '__main__':
             for step, step_dict in enumerate(script_config['script_step'], start=1):
                 mode = step_dict.get('mode')
                 img_path = step_dict.get('img_path')
+                role = step_dict.get('role')
+                check_path_list = step_dict.get('check_path_list')
+                action_list = step_dict.get('action_list')
                 pos_list = step_dict.get('pos_list')
                 delta = step_dict.get('delta')
 
@@ -235,6 +334,11 @@ if __name__ == '__main__':
                         print(f'步驟{step}: 資料遺失')
                         print(f'步驟內容: {step_dict}')
                     auto_run(window_dict, keyboard, img_path, pos_list)
+                if mode == 'role_run':
+                    if not img_path or not window_dict or not pos_list or not role:
+                        print(f'步驟{step}: 資料遺失')
+                        print(f'步驟內容: {step_dict}')
+                    auto_run_with_role(window_dict, keyboard, mouse, img_path, role, pos_list, check_path_list)
                 elif mode == 'click':
                     if not img_path or not window_dict:
                         print(f'步驟{step}: 資料遺失')
@@ -245,7 +349,12 @@ if __name__ == '__main__':
                     if not img_path or not window_dict or not delta:
                         print(f'步驟{step}: 資料遺失')
                         print(f'步驟內容: {step_dict}')
-                    case1(window_dict, img_path, delta)
+                    case1(window_dict, img_path, delta, check_path_list)
+                elif mode == 'home_send':
+                    if not img_path or not window_dict or not action_list:
+                        print(f'步驟{step}: 資料遺失')
+                        print(f'步驟內容: {step_dict}')
+                    case3(window_dict, mouse, img_path, action_list)
             count += 1
     #     case1(window_dict)
     #     case2(window_dict)

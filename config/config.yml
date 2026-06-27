@@ -1,6 +1,11 @@
+version: v0.1.0.0
 mode: 0
 times: 999999
 keybind:
   jump: z
+  attack_boss: x
+  attack_multi: c
+  home_send: j
+
 script:
-  path: ./scripts/帽車.yml
+  path: ./scripts/50.yml
