@@ -28,10 +28,6 @@ script_step:
         flag: or
       - img: .\data\50\k2.png
         flag: or
-      - img: .\data\50\k3.png
-        flag: or
-      - img: .\data\50\k4.png
-        flag: or
     post_list:
     delta: [ 0, 5 ]
   - mode: click
@@ -43,11 +39,8 @@ script_step:
     img_path: .\data\50\keep2.png
     post_list:
     delta:
-  - mode: home_send
+  - mode: press
     img_path: .\data\50\out2.png
-    action_list:
-      - img: .\data\common\home.png
-      - img: .\data\common\50.png
     post_list:
     delta:
   - mode: role_run
@@ -68,5 +61,13 @@ script_step:
     delta: [ 0, 5 ]
   - mode: click
     img_path: .\data\50\yes.png
+    post_list:
+    delta:
+  - mode: click
+    img_path: .\data\common\home.png
+    post_list:
+    delta:
+  - mode: click
+    img_path: .\data\common\50.png
     post_list:
     delta:

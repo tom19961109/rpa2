@@ -6,7 +6,10 @@ import win32con
 import win32gui
 import win32api
 import win32ui
+import win32process
 import time
+
+from utility.params import WinTitle
 
 
 def get_root(hwnd):
@@ -18,10 +21,12 @@ def get_root(hwnd):
 
 
 def get_window_from_mouse():
+    start = time.time()
     print("請點選目標視窗...")
     time.sleep(0.5)
     last_state = False
-    while True:
+
+    while time.time() - start < 180:
         state = win32api.GetAsyncKeyState(0x01) & 0x8000
 
         if state and not last_state:
@@ -36,12 +41,44 @@ def get_window_from_mouse():
             print("左上:", (rect[0], rect[1]))
             print("右下:", (rect[2], rect[3]))
             print("標題:", win32gui.GetWindowText(hwnd))
-            return {'hwnd': hwnd, "rect": rect, 'title': win32gui.GetWindowText(hwnd)}
+            title = win32gui.GetWindowText(hwnd)
+            if WinTitle in title:
+                return {'hwnd': hwnd, "rect": rect, 'title': win32gui.GetWindowText(hwnd)}
 
         last_state = state
         time.sleep(0.01)
 
-def move_window(hwnd, x=505, y=5):
+    return {}
+
+def force_focus(hwnd):
+    if not win32gui.IsWindow(hwnd):
+        return
+
+    # 1. 還原視窗（避免最小化/背景）
+    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+
+    # 2. 解除前景鎖
+    fg = win32gui.GetForegroundWindow()
+
+    current = win32api.GetCurrentThreadId()
+    fg_tid = win32process.GetWindowThreadProcessId(fg)[0]
+    target_tid = win32process.GetWindowThreadProcessId(hwnd)[0]
+
+    win32process.AttachThreadInput(current, fg_tid, True)
+    win32process.AttachThreadInput(current, target_tid, True)
+
+    # 3. 強制前景
+    win32gui.BringWindowToTop(hwnd)
+    win32gui.SetForegroundWindow(hwnd)
+    win32gui.SetActiveWindow(hwnd)
+    win32gui.SetFocus(hwnd)
+
+    # 4. detach
+    win32process.AttachThreadInput(current, fg_tid, False)
+    win32process.AttachThreadInput(current, target_tid, False)
+
+
+def move_window(hwnd, x=505, y=5, window_dict={}):
     rect = win32gui.GetWindowRect(hwnd)
     width = rect[2] - rect[0]
     height = rect[3] - rect[1]
@@ -55,6 +92,10 @@ def move_window(hwnd, x=505, y=5):
         height,
         0
     )
+
+    rect = win32gui.GetWindowRect(hwnd)
+    window_dict['rect'] = rect
+    return window_dict
 
 def capture_window(hwnd):
     left, top, right, bottom = win32gui.GetWindowRect(hwnd)

@@ -1,11 +1,24 @@
-version: v0.1.0.0
+version: v0.1.1.0
 mode: 0
-times: 999999
+title: 無題谷
+times: 99999999
 keybind:
   jump: z
   attack_boss: x
   attack_multi: c
   home_send: j
-
+arrive:
+  x: 15
+  y: 3
+screen:
+  black_threshold: 20
+  black_check_interval: 0.2
+  black_limit_time: 5
+role_run:
+  limit_time: 10.0
+  attack_duration: 7.0
+  attack_press_delay: 0.3
+  move_delay: 0.2
+  up_press_delay: 0.2
 script:
   path: ./scripts/50.yml

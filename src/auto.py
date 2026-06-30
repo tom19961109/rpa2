@@ -4,7 +4,8 @@ import numpy as np
 from pynput.keyboard import Key
 
 from src.win_func.get_win import capture_window
-from utility.params import jump, ScriptParams
+from utility.params import jump, ScriptParams, arrive_x, arrive_y, black_threshold, black_limit_time
+
 
 def auto_action_role(action, keyboard):
     if action == "right":
@@ -178,11 +179,11 @@ def move_to_target_with_role(rx, ry, tx, ty):
     dy = ty - ry
     print(dx, dy)
 
-    if abs(dx) <= 10 and abs(dy) == 0:
+    if abs(dx) <= arrive_x and abs(dy) <= arrive_y:
         return "arrived"
 
     # 上下差距大 → 需要跳
-    if abs(dx) <= 50 and dy < -250:
+    if abs(dx) <= 70 and dy < -250:
         return "jump_up"
     elif abs(dx) <= 5 and dy <= -250:
         return "up"
@@ -238,6 +239,7 @@ def move_to_target(rx, ry, tx, ty):
 
 
 def check_black(window_dict, keyboard=None):
+    start = time.time()
     if ScriptParams.status == 'wait':
         return None
 
@@ -252,16 +254,16 @@ def check_black(window_dict, keyboard=None):
             time.sleep(0.1)
         keyboard.release(Key.up)
 
-    time.sleep(1.5)
-    while True:
+    time.sleep(1)
+    while time.time() - start < black_limit_time:
         if ScriptParams.status == 'wait':
             return None
         
         img = capture_window(window_dict['hwnd'])
-        if np.mean(img) > 50:
+        if np.mean(img) > black_threshold:
             print("已離開黑畫面")
             break
-
+    return None
 
 def find_platform(x, y, platforms, tolerance=3):
     if not platforms:
