@@ -3,3 +3,4 @@ opencv-python==4.8.0.74
 pywin32==305
 pyyaml==6.0.3
 pyinstaller==6.9.0
+mss==9.0.2

@@ -1,38 +1,38 @@
 script_step:
   - mode: shift_click
-    img_path: .\data\0001_1.png
+    img_path: .\data\car\0001_1.png
     post_list:
     delta: [-439, -8]
   - mode: shift_click
-    img_path: .\data\0001_3.png
+    img_path: .\data\car\0001_3.png
     post_list:
     delta: [-57, 300]
   - mode: click
-    img_path: .\data\0002.png
+    img_path: .\data\car\0002.png
     post_list:
     delta:
   - mode: run
-    img_path: .\data\0004.png
+    img_path: .\data\car\0004.png
     pos_list: 
       - [578, 189]
       - [625, 189]
       - [717, 185]
     delta:
   - mode: run
-    img_path: .\data\0005.png
+    img_path: .\data\car\0005.png
     pos_list:
       - [624, 196]
       - [686, 174]
       - [624, 163]
     delta:
   - mode: run
-    img_path: .\data\0006.png
+    img_path: .\data\car\0006.png
     pos_list:
       - [629, 172]
       - [709, 179]
     delta:
   - mode: run
-    img_path: .\data\0007.png
+    img_path: .\data\car\0007.png
     pos_list:
       - [642, 198]
       - [642, 153]
@@ -40,7 +40,7 @@ script_step:
       - [678, 153]
     delta:
   - mode: run
-    img_path: .\data\0008.png
+    img_path: .\data\car\0008.png
     pos_list:
       - [633, 200]
       - [633, 156]

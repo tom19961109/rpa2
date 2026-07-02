@@ -70,7 +70,7 @@ if __name__ == '__main__':
     from src.win_func.get_win import get_window_from_mouse, capture_window
 
     window_dict = get_window_from_mouse()
-    img = capture_window(window_dict['hwnd'])
+    img = capture_window(window_dict)
     ptn = cv2.imread(r'/data/0001_1.png')
     result_img, boxes = template_match_and_draw(img, ptn, 0.85)
     print("找到數量:", len(boxes))

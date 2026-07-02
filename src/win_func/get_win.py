@@ -1,6 +1,7 @@
 import ctypes
 
 import cv2
+import mss
 import numpy as np
 import win32con
 import win32gui
@@ -8,8 +9,27 @@ import win32api
 import win32ui
 import win32process
 import time
-
+# import mss
 from utility.params import WinTitle
+
+# sct = mss.mss()
+
+def get_full_window(monitor_id=1):
+    """
+    monitor_id:
+        1 = 主螢幕
+        0 = 所有螢幕
+    return:
+        BGR image (OpenCV format)
+    """
+    with mss.mss() as sct:
+        monitor = sct.monitors[monitor_id]
+        screenshot = sct.grab(monitor)
+
+        img = np.array(screenshot)
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+
+    return img
 
 
 def get_root(hwnd):
@@ -49,6 +69,23 @@ def get_window_from_mouse():
         time.sleep(0.01)
 
     return {}
+
+def find_windows_by_title(target_title):
+    results = []
+
+    def callback(hwnd, _):
+        title = win32gui.GetWindowText(hwnd)
+
+        if target_title in title:      # 或 title == target_title
+            rect = win32gui.GetWindowRect(hwnd)
+            results.append({
+                "hwnd": hwnd,
+                "rect": rect,
+                "title": title
+            })
+
+    win32gui.EnumWindows(callback, None)
+    return results
 
 def force_focus(hwnd):
     if not win32gui.IsWindow(hwnd):
@@ -97,38 +134,61 @@ def move_window(hwnd, x=505, y=5, window_dict={}):
     window_dict['rect'] = rect
     return window_dict
 
-def capture_window(hwnd):
-    left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-    width = right - left
-    height = bottom - top
+def capture_window(window_dict, mode=1):
+    if mode == 0:
+        pass
+        # hwnd = window_dict["hwnd"]
+        #
+        # # Client 左上角的螢幕座標
+        # left, top = win32gui.ClientToScreen(hwnd, (0, 0))
+        #
+        # # Client 大小
+        # rect = win32gui.GetClientRect(hwnd)
+        # width = rect[2]
+        # height = rect[3]
+        #
+        # monitor = {
+        #     "left": left,
+        #     "top": top,
+        #     "width": width,
+        #     "height": height,
+        # }
+        #
+        # img = np.array(sct.grab(monitor))
+        # return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+    else:
+        hwnd = window_dict['hwnd']
+        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+        width = right - left
+        height = bottom - top
 
-    hwnd_dc = win32gui.GetWindowDC(hwnd)
-    mfc_dc = win32ui.CreateDCFromHandle(hwnd_dc)
-    save_dc = mfc_dc.CreateCompatibleDC()
+        hwnd_dc = win32gui.GetWindowDC(hwnd)
+        mfc_dc = win32ui.CreateDCFromHandle(hwnd_dc)
+        save_dc = mfc_dc.CreateCompatibleDC()
 
-    bitmap = win32ui.CreateBitmap()
-    bitmap.CreateCompatibleBitmap(mfc_dc, width, height)
-    save_dc.SelectObject(bitmap)
+        bitmap = win32ui.CreateBitmap()
+        bitmap.CreateCompatibleBitmap(mfc_dc, width, height)
+        save_dc.SelectObject(bitmap)
 
-    # 🔥 正確：用 ctypes 呼叫 PrintWindow
-    result = ctypes.windll.user32.PrintWindow(hwnd, save_dc.GetSafeHdc(), 1)
+        # 🔥 正確：用 ctypes 呼叫 PrintWindow
+        result = ctypes.windll.user32.PrintWindow(hwnd, save_dc.GetSafeHdc(), 1)
 
-    bmpinfo = bitmap.GetInfo()
-    bmpstr = bitmap.GetBitmapBits(True)
+        bmpinfo = bitmap.GetInfo()
+        bmpstr = bitmap.GetBitmapBits(True)
 
-    img = np.frombuffer(bmpstr, dtype='uint8')
-    img.shape = (height, width, 4)
+        img = np.frombuffer(bmpstr, dtype='uint8')
+        img.shape = (height, width, 4)
 
-    # cleanup
-    win32gui.DeleteObject(bitmap.GetHandle())
-    save_dc.DeleteDC()
-    mfc_dc.DeleteDC()
-    win32gui.ReleaseDC(hwnd, hwnd_dc)
+        # cleanup
+        win32gui.DeleteObject(bitmap.GetHandle())
+        save_dc.DeleteDC()
+        mfc_dc.DeleteDC()
+        win32gui.ReleaseDC(hwnd, hwnd_dc)
 
-    if result != 1:
-        print("⚠️ PrintWindow 可能失敗（可能是遊戲/DirectX）")
+        if result != 1:
+            print("⚠️ PrintWindow 可能失敗（可能是遊戲/DirectX）")
 
-    return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
 
 def get_mouse_pos_in_window(hwnd):

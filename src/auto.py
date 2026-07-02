@@ -259,7 +259,7 @@ def check_black(window_dict, keyboard=None):
         if ScriptParams.status == 'wait':
             return None
         
-        img = capture_window(window_dict['hwnd'])
+        img = capture_window(window_dict)
         if np.mean(img) > black_threshold:
             print("已離開黑畫面")
             break
