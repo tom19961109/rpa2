@@ -10,7 +10,8 @@ import win32ui
 import win32process
 import time
 # import mss
-from utility.params import WinTitle
+from utility.params import WinTitle, ScriptParams
+
 
 # sct = mss.mss()
 
@@ -46,7 +47,7 @@ def get_window_from_mouse():
     time.sleep(0.5)
     last_state = False
 
-    while time.time() - start < 180:
+    while time.time() - start < 30:
         state = win32api.GetAsyncKeyState(0x01) & 0x8000
 
         if state and not last_state:

@@ -19,7 +19,7 @@ from pynput.keyboard import Controller as KeyboardController, Key
 import pynput.keyboard as keyboard_listener
 from utility.params import map_h, map_w, ScriptParams, ConfigMode, ConfigScriptPath, ConfigTimes, home_send, \
     attack_multi, WinTitle, match_conf, limit_time, move_delay, attack_duration
-from utility.utility import read_img
+from utility.utility import read_img, input_with_timeout
 import win32gui
 
 
@@ -64,6 +64,7 @@ def case1(window_dict, img_path, delta, check_path_list=None, mouse=None):
         #     print(result)
         #     time.sleep(1)
 
+
 def case2(window_dict, img_path, mouse=None):
     img = capture_window(window_dict)
     ptn = read_img(rf'{img_path}')
@@ -99,6 +100,7 @@ def case3(window_dict, mouse, img_path, action_list):
             if c_boxes:
                 case2(window_dict, i['img'], mouse)
 
+
 def key_press(window_dict, img_path):
     img = capture_window(window_dict)
     ptn = read_img(rf'{img_path}')
@@ -109,6 +111,7 @@ def key_press(window_dict, img_path):
             time.sleep(0.2)
         keyboard.release(home_send)
         time.sleep(1)
+
 
 def change_channel(window_dict, keyboard):
     img = capture_window(window_dict)
@@ -292,6 +295,7 @@ def auto_run_with_role(window_dict, keyboard, mouse,
 
     return None
 
+
 def test(window_dict):
     x1 = 0
     y1 = 0
@@ -331,26 +335,45 @@ def test(window_dict):
 if __name__ == '__main__':
     mouse = MouseController()
 
-
-    # def on_click(x, y, button, pressed):
-    #     if pressed:
-    #         print(f"你點了：({x}, {y})")
-    #
-    #
-    # with pynput.mouse.Listener(on_click=on_click) as listener:
-    #     listener.join()
-
     keyboard = KeyboardController()
     listener = keyboard_listener.Listener(on_press=on_press)
     listener.start()
     # window_dict = {'hwnd': 1234}
-    window_dict = get_window_from_mouse()
-    if not window_dict:
-        input('時間內沒有選擇視窗, 請重新開啟此程式, 按任意鍵關閉程式')
-        sys.exit(0)
+    mode = input_with_timeout(
+        '請選擇模式 \n'
+        '0: 自動開啟遊戲並登入 \n'
+        '1: 手動選擇視窗 \n'
+        '2: 我按錯了, 我要關掉程式 \n'
+        '10 秒後將自動設定為手動選擇視窗\n'
+    )
+    if mode is None:
+        mode = '1'
 
     window_dict_list = find_windows_by_title(WinTitle)
-    window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
+    window_dict = {'hwnd': None}
+    mode_time = time.time()
+    max_win = 2
+    if mode == '1':
+        window_dict = get_window_from_mouse()
+        if not window_dict:
+            print("5 秒後自動關閉程式...")
+            time.sleep(5)
+            sys.exit(0)
+        window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
+    elif mode == '0' and len(window_dict_list) < max_win:
+        ScriptParams.status = 'running'
+        print('準備自動開啟遊戲, 你先別急')
+        window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
+        window_dict = maple_login(mouse, keyboard, window_list)
+    elif mode == '0' and len(window_dict_list) >= max_win:
+        print('遊戲最多只能開兩個視窗, 不能再幫你多開一個唷, 請按任意鍵脫離程式')
+        print("5 秒後自動關閉程式...")
+        time.sleep(5)
+        sys.exit(0)
+    elif mode == '2':
+        print('掰掰')
+        time.sleep(1)
+        sys.exit(0)
 
     window_dict = move_window(window_dict['hwnd'], 544, 7, window_dict)
     print(f'成功將視窗移動到目標位置')
@@ -365,7 +388,8 @@ if __name__ == '__main__':
 
         if not os.path.isfile(file_name):
             print(f'找不到檔案: {os.path.abspath(file_name)}')
-            input('輸入任意見結束程式')
+            print("5 秒後自動關閉程式...")
+            time.sleep(5)
             sys.exit(0)
 
         with open(file_name, "r", encoding="utf-8") as f:
@@ -373,7 +397,8 @@ if __name__ == '__main__':
 
         if not script_config.get('script_step'):
             print(f'該檔案目前沒有參數 script_step, 啟動失敗')
-            input('輸入任意見結束程式')
+            print("5 秒後自動關閉程式...")
+            time.sleep(5)
             sys.exit(0)
 
         print(f'成功載入腳本: {os.path.abspath(file_name)}')
@@ -433,53 +458,3 @@ if __name__ == '__main__':
             except Exception as e:
                 window_dict = maple_login(mouse, keyboard, window_list)
                 error_count += 1
-
-    #     case1(window_dict)
-    #     case2(window_dict)
-    #     change_channel(window_dict, keyboard)
-    #     auto_run(window_dict, keyboard,
-    #              r'D:\workspace\rpa2\data\0004.png',
-    #              [(578, 189), (625, 189), (717, 185)])
-    #     auto_run(window_dict, keyboard,
-    #              r'D:\workspace\rpa2\data\0005.png',
-    #              [(624, 196), (686, 174), (624, 163)])
-    #
-    #     auto_run(window_dict, keyboard,
-    #              r'D:\workspace\rpa2\data\0006.png',
-    #              [(629, 172), (709, 179)])
-    #
-    #     auto_run(
-    #         window_dict, keyboard,
-    #         r'D:\workspace\rpa2\data\0007.png',
-    #         [(642, 198), (642, 153), (663, 153), (678, 153)],
-    #         platform_list=[
-    #             [(612, 198), (687, 198)],
-    #             [(613, 175), (672, 175)],
-    #             [(639, 153), (683, 153)]
-    #         ]
-    #     )
-    #     result = auto_run(window_dict, keyboard,
-    #                       r'D:\workspace\rpa2\data\0008.png',
-    #                       [(633, 200), (633, 156), (652, 156)])
-    #     if result == 'done':
-    #         count += 1
-    #     total_time = time.time() - start_time
-    #     count_avg = 0 if count <= 0 else total_time / count
-    #     print(f'total_time: {total_time}, '
-    #           f'hat: {count},'
-    #           f'avg: {count_avg}')
-
-    # pos_list = [(633, 200), (633, 178), (633, 156), (653, 156)]
-
-    # img = capture_window(window_dict['hwnd'])
-    # ptn = cv2.imread(r'D:\workspace\rpa2\data\0005.png')
-    # test(img, ptn, platform_list)
-    # auto_action('right', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('right_jump', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('left', keyboard)
-    # auto_action('left', keyboard)
