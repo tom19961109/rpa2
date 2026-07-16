@@ -155,7 +155,7 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
         keyboard.release(Key.f10)
         tx = 0
         sx = 0
-        for pos in pos_list:
+        for pos_num, pos in enumerate(pos_list, start=1):
             if ScriptParams.status == 'wait':
                 return None
 
@@ -169,7 +169,7 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
             pre_sx = 0
             pre_sy = 0
             start = time.time()
-            while time.time() - start < 60:
+            while time.time() - start < limit_time:
                 if ScriptParams.status == 'wait':
                     return None
 
@@ -191,7 +191,8 @@ def auto_run(window_dict, keyboard, ptn_path, pos_list, platform_list=None, retr
 
                 pre_sx = sx
                 pre_sy = sy
-                action = move_to_target(sx, sy, tx, ty)
+                torrance_flag = 0 if pos_num == len(pos_list) else 1
+                action = move_to_target(sx, sy, tx, ty, torrance_flag=torrance_flag)
                 if action == "arrived":
                     arrive_count += 1
                     time.sleep(0.2)

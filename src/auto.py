@@ -206,11 +206,13 @@ def move_to_target_with_role(rx, ry, tx, ty):
 
     return "left"
 
-def move_to_target(rx, ry, tx, ty):
+def move_to_target(rx, ry, tx, ty, torrance_flag=0):
     dx = tx - rx
     dy = ty - ry
 
-    if abs(dx) <= 1 and abs(dy) == 0:
+    if torrance_flag == 0 and abs(dx) <= 1 and abs(dy) == 0:
+        return "arrived"
+    elif torrance_flag == 1 and abs(dx) <= arrive_x and abs(dy) == 0:
         return "arrived"
 
     # 上下差距大 → 需要跳

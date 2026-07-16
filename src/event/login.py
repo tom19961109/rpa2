@@ -11,9 +11,9 @@ from win_func.get_win import get_full_window, find_windows_by_title, move_window
 
 
 def maple_login(mouse, keyboard, window_list=[]):
-    # import subprocess
-    # subprocess.Popen(exe_path)
-    # time.sleep(30)
+    import subprocess
+    subprocess.Popen(exe_path)
+    time.sleep(30)
     window_dict = {}
     start_find_window_flag = False
     find_window_flag = False
@@ -146,6 +146,13 @@ def maple_login(mouse, keyboard, window_list=[]):
                 return window_dict
         except Exception as ex:
             print(f"我跳錯了, 但是不用管我, 我會修好自己, 如果我沒修好自己, 叫麥當勞 MMM\n ex: {ex}")
+
+            # start_find_window_flag = False
+            # find_window_flag = False
+            # login_flag = False
+            # channel_flag = False
+            # select_role_flag = False
+            # player_flag = False
             check_list = [{'check': '', 'click': r'.\data\login\NO1.png'},
                           {'check': '', 'click': r'.\data\login\NO2.png'},
                           {'check': r'.\data\login\mkd.png', 'click': r'.\data\login\mkd_check.png'}]
