@@ -334,128 +334,134 @@ def test(window_dict):
 
 
 if __name__ == '__main__':
-    mouse = MouseController()
+    try:
+        mouse = MouseController()
 
-    keyboard = KeyboardController()
-    listener = keyboard_listener.Listener(on_press=on_press)
-    listener.start()
-    # window_dict = {'hwnd': 1234}
-    mode = input_with_timeout(
-        '請選擇模式 \n'
-        '0: 自動開啟遊戲並登入 \n'
-        '1: 手動選擇視窗 \n'
-        '2: 我按錯了, 我要關掉程式 \n'
-        '10 秒後將自動設定為手動選擇視窗\n'
-    )
-    if mode is None:
-        mode = '1'
+        keyboard = KeyboardController()
+        listener = keyboard_listener.Listener(on_press=on_press)
+        listener.start()
+        # window_dict = {'hwnd': 1234}
+        mode = input_with_timeout(
+            '請選擇模式 \n'
+            '0: 自動開啟遊戲並登入 \n'
+            '1: 手動選擇視窗 \n'
+            '2: 我按錯了, 我要關掉程式 \n'
+            '10 秒後將自動設定為手動選擇視窗\n'
+        )
+        if mode is None:
+            mode = '1'
 
-    window_dict_list = find_windows_by_title(WinTitle)
-    window_dict = {'hwnd': None}
-    mode_time = time.time()
-    max_win = 2
-    if mode == '1':
-        window_dict = get_window_from_mouse()
-        if not window_dict:
+        window_dict_list = find_windows_by_title(WinTitle)
+        window_dict = {'hwnd': None}
+        mode_time = time.time()
+        max_win = 2
+        if mode == '1':
+            window_dict = get_window_from_mouse()
+            if not window_dict:
+                print("5 秒後自動關閉程式...")
+                time.sleep(5)
+                sys.exit(0)
+            window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
+        elif mode == '0' and len(window_dict_list) < max_win:
+            ScriptParams.status = 'running'
+            print('準備自動開啟遊戲, 你先別急')
+            window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
+            window_dict = maple_login(mouse, keyboard, window_list)
+        elif mode == '0' and len(window_dict_list) >= max_win:
+            print('遊戲最多只能開兩個視窗, 不能再幫你多開一個唷, 請按任意鍵脫離程式')
             print("5 秒後自動關閉程式...")
             time.sleep(5)
             sys.exit(0)
-        window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
-    elif mode == '0' and len(window_dict_list) < max_win:
-        ScriptParams.status = 'running'
-        print('準備自動開啟遊戲, 你先別急')
-        window_list = [i['hwnd'] for i in window_dict_list if i['hwnd'] != window_dict['hwnd']]
-        window_dict = maple_login(mouse, keyboard, window_list)
-    elif mode == '0' and len(window_dict_list) >= max_win:
-        print('遊戲最多只能開兩個視窗, 不能再幫你多開一個唷, 請按任意鍵脫離程式')
-        print("5 秒後自動關閉程式...")
-        time.sleep(5)
-        sys.exit(0)
-    elif mode == '2':
-        print('掰掰')
-        time.sleep(1)
-        sys.exit(0)
-
-    window_dict = move_window(window_dict['hwnd'], 544, 7, window_dict)
-    print(f'成功將視窗移動到目標位置')
-    force_focus(window_dict['hwnd'])
-    print(f'聚焦遊戲視窗')
-    error_count = 0
-    if ConfigMode == 1:
-        test(window_dict)
-    else:
-        win32gui.SetForegroundWindow(window_dict['hwnd'])
-        file_name = ConfigScriptPath
-
-        if not os.path.isfile(file_name):
-            print(f'找不到檔案: {os.path.abspath(file_name)}')
-            print("5 秒後自動關閉程式...")
-            time.sleep(5)
+        elif mode == '2':
+            print('掰掰')
+            time.sleep(1)
             sys.exit(0)
 
-        with open(file_name, "r", encoding="utf-8") as f:
-            script_config = yaml.safe_load(f)
+        window_dict = move_window(window_dict['hwnd'], 544, 7, window_dict)
+        print(f'成功將視窗移動到目標位置')
+        force_focus(window_dict['hwnd'])
+        print(f'聚焦遊戲視窗')
+        error_count = 0
+        if ConfigMode == 1:
+            test(window_dict)
+        else:
+            win32gui.SetForegroundWindow(window_dict['hwnd'])
+            file_name = ConfigScriptPath
 
-        if not script_config.get('script_step'):
-            print(f'該檔案目前沒有參數 script_step, 啟動失敗')
-            print("5 秒後自動關閉程式...")
-            time.sleep(5)
-            sys.exit(0)
+            if not os.path.isfile(file_name):
+                print(f'找不到檔案: {os.path.abspath(file_name)}')
+                print("5 秒後自動關閉程式...")
+                time.sleep(5)
+                sys.exit(0)
 
-        print(f'成功載入腳本: {os.path.abspath(file_name)}')
-        count = 0
-        start_time = time.time()
-        ScriptParams.status = 'running'
-        ea(keyboard)
-        while count < ConfigTimes:
-            try:
-                if ScriptParams.status == 'wait':
-                    print('停止腳本')
-                    break
+            with open(file_name, "r", encoding="utf-8") as f:
+                script_config = yaml.safe_load(f)
 
-                print(f"count: {count}, error_count: {error_count}")
-                for step, step_dict in enumerate(script_config['script_step'], start=1):
-                    mode = step_dict.get('mode')
-                    img_path = step_dict.get('img_path')
-                    role = step_dict.get('role')
-                    check_path_list = step_dict.get('check_path_list')
-                    action_list = step_dict.get('action_list')
-                    pos_list = step_dict.get('pos_list')
-                    delta = step_dict.get('delta')
+            if not script_config.get('script_step'):
+                print(f'該檔案目前沒有參數 script_step, 啟動失敗')
+                print("5 秒後自動關閉程式...")
+                time.sleep(5)
+                sys.exit(0)
 
-                    if mode == 'run':
-                        if not img_path or not window_dict or not pos_list:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                        auto_run(window_dict, keyboard, img_path, pos_list)
-                    if mode == 'role_run':
-                        if not img_path or not window_dict or not pos_list or not role:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                        auto_run_with_role(window_dict, keyboard, mouse, img_path, role, pos_list, check_path_list)
-                    elif mode == 'click':
-                        if not img_path or not window_dict:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                            break
-                        case2(window_dict, img_path, mouse)
-                    elif mode == 'press':
-                        if not img_path or not window_dict:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                            break
-                        key_press(window_dict, img_path)
-                    elif mode == 'shift_click':
-                        if not img_path or not window_dict or not delta:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                        case1(window_dict, img_path, delta, check_path_list, mouse)
-                    elif mode == 'home_send':
-                        if not img_path or not window_dict or not action_list:
-                            print(f'步驟{step}: 資料遺失')
-                            print(f'步驟內容: {step_dict}')
-                        case3(window_dict, mouse, img_path, action_list)
-                count += 1
-            except Exception as e:
-                window_dict = maple_login(mouse, keyboard, window_list)
-                error_count += 1
+            print(f'成功載入腳本: {os.path.abspath(file_name)}')
+            count = 0
+            start_time = time.time()
+            ScriptParams.status = 'running'
+            ea(keyboard)
+            while count < ConfigTimes:
+                try:
+                    if ScriptParams.status == 'wait':
+                        print('停止腳本')
+                        break
+
+                    print(f"count: {count}, error_count: {error_count}")
+                    for step, step_dict in enumerate(script_config['script_step'], start=1):
+                        mode = step_dict.get('mode')
+                        img_path = step_dict.get('img_path')
+                        role = step_dict.get('role')
+                        check_path_list = step_dict.get('check_path_list')
+                        action_list = step_dict.get('action_list')
+                        pos_list = step_dict.get('pos_list')
+                        delta = step_dict.get('delta')
+
+                        if mode == 'run':
+                            if not img_path or not window_dict or not pos_list:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                            auto_run(window_dict, keyboard, img_path, pos_list)
+                        if mode == 'role_run':
+                            if not img_path or not window_dict or not pos_list or not role:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                            auto_run_with_role(window_dict, keyboard, mouse, img_path, role, pos_list, check_path_list)
+                        elif mode == 'click':
+                            if not img_path or not window_dict:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                                break
+                            case2(window_dict, img_path, mouse)
+                        elif mode == 'press':
+                            if not img_path or not window_dict:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                                break
+                            key_press(window_dict, img_path)
+                        elif mode == 'shift_click':
+                            if not img_path or not window_dict or not delta:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                            case1(window_dict, img_path, delta, check_path_list, mouse)
+                        elif mode == 'home_send':
+                            if not img_path or not window_dict or not action_list:
+                                print(f'步驟{step}: 資料遺失')
+                                print(f'步驟內容: {step_dict}')
+                            case3(window_dict, mouse, img_path, action_list)
+                    count += 1
+                except Exception as e:
+                    window_dict = maple_login(mouse, keyboard, window_list)
+                    error_count += 1
+    except Exception as ex2:
+        print(ex2)
+        print()
+        print('你的東東掛掉了, 快給麥當勞看發生了甚麼\n')
+        input('按下enter, 跳出程式')

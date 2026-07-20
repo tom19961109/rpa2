@@ -21,6 +21,7 @@ def maple_login(mouse, keyboard, window_list=[]):
     channel_flag = False
     select_role_flag = False
     player_flag = False
+    not_found_count = 0
     while ScriptParams.status == 'running':
         try:
             full_window = get_full_window()
@@ -53,6 +54,7 @@ def maple_login(mouse, keyboard, window_list=[]):
                 pth_img = read_img(r'.\data\login\login.png')
                 _, b2 = template_match_and_draw(full_window, pth_img, match_conf)
                 if len(b2):
+                    not_found_count = 0
                     window_dict = move_window(window_dict['hwnd'], 544, 7, window_dict)
                     time.sleep(1)
                     keyboard.press(Key.f9)
@@ -109,6 +111,7 @@ def maple_login(mouse, keyboard, window_list=[]):
                 pth_img = read_img(r'.\data\login\go.png')
                 _, b1 = template_match_and_draw(full_window, pth_img, match_conf)
                 if len(b1):
+                    not_found_count = 0
                     pos = out_channel_pos.get(channel)
                     if pos:
                         x, y = pos
@@ -125,6 +128,7 @@ def maple_login(mouse, keyboard, window_list=[]):
                 pth_img = read_img(r'.\data\login\select_role.png')
                 _, b1 = template_match_and_draw(full_window, pth_img, match_conf)
                 if len(b1):
+                    not_found_count = 0
                     target = b1[0]
                     click(mouse, target[0], target[1])
                     time.sleep(0.5)
@@ -134,6 +138,7 @@ def maple_login(mouse, keyboard, window_list=[]):
                 pth_img = read_img(r'.\data\login\player.png')
                 _, b1 = template_match_and_draw(full_window, pth_img, match_conf)
                 if len(b1):
+                    not_found_count = 0
                     ea(keyboard)
                     player_flag = True
 
@@ -147,12 +152,6 @@ def maple_login(mouse, keyboard, window_list=[]):
         except Exception as ex:
             print(f"我跳錯了, 但是不用管我, 我會修好自己, 如果我沒修好自己, 叫麥當勞 MMM\n ex: {ex}")
 
-            # start_find_window_flag = False
-            # find_window_flag = False
-            # login_flag = False
-            # channel_flag = False
-            # select_role_flag = False
-            # player_flag = False
             check_list = [{'check': '', 'click': r'.\data\login\NO1.png'},
                           {'check': '', 'click': r'.\data\login\NO2.png'},
                           {'check': r'.\data\login\mkd.png', 'click': r'.\data\login\mkd_check.png'}]
@@ -174,6 +173,25 @@ def maple_login(mouse, keyboard, window_list=[]):
                     break
 
                 time.sleep(1)
+
+            if 'hwnd' in str(ex) and not_found_count < 5:
+                print('看來無題又掛掉了, 我搶救看看')
+                import subprocess
+                subprocess.Popen(exe_path)
+                print('召喚無題谷')
+                not_found_count += 1
+                time.sleep(30)
+                start_find_window_flag = False
+                find_window_flag = False
+                login_flag = False
+                channel_flag = False
+                select_role_flag = False
+                player_flag = False
+
+            elif not_found_count:
+                print('搶救 5 次失敗, 先不幫你電腦電擊了')
+                raise
+
 
         time.sleep(1)
     return None
